@@ -270,11 +270,7 @@ export const login = async (req, res) => {
     const isEmail = validator.isEmail(email);
     const isPassword = validator.isStrongPassword(password);
 
-    let aa = otpGenerator.generate(6, {
-      upperCaseAlphabets: false,
-      specialChars: false,
-    });
-    console.log(aa);
+  
     if (!isEmail) {
       return res.status(400).json({
         message: "invalid email",
@@ -362,3 +358,44 @@ export const loginOtp = async (req, res) => {
     });
   }
 };
+export const generateOtp = async (req, res) => {
+  try {
+    const { contact } = req.body;
+
+    const userData = await UserModel.findOne({ contact: contact });
+
+    let otp;
+    if (userData.contact === contact) {
+      otp = otpGenerator.generate(6, {
+        upperCaseAlphabets: false,
+        specialChars: false,
+      });
+      console.log(otp);
+    }
+
+    if (!userData) {
+      return res.status(200).json({
+        message: "invalid number ",
+      });
+    }
+    const updatedData = await UserModel.updateOne(
+      { contact: contact },
+      {
+        $set: {
+          otp: otp,
+        },
+      }
+    );
+
+    if (updatedData) {
+      return res.status(200).json({
+        message: "otp send",
+      });
+    }
+  } catch (error) {
+    return res.status(500).json({
+      message: error.message,
+    });
+  }
+};
+
