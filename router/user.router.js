@@ -8,6 +8,7 @@ import {
   SingUp,
   login,
   loginOtp,
+  generateOtp
 } from "../controller/user.controller";
 
 const router = express.Router();
@@ -26,5 +27,7 @@ router.post("/sign-up", SingUp);
 
 router.get("/login", login);
 router.get("/loginOtp", loginOtp);
+
+router.patch("/generateOtp", generateOtp);
 
 export default router;
