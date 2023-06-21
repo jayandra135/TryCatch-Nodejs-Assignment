@@ -25,6 +25,23 @@ const storage = multer.diskStorage({
 const upload = multer({ storage: storage });
 export const getAllProduct = async (req, res) => {
   try {
+    const { q, size, page, min, max } = req.query;
+    console.log(q);
+
+    const rgx = (pattern) => new RegExp(`.*${pattern}.*`);
+    const searchRgx = rgx(q);
+
+    let filtered = {};
+    if (q !== undefined || (min !== undefined && max !== undefined)) {
+      filtered = {
+        $or: [
+          { name: { $regex: searchRgx, $options: "i" } },
+          { description: { $regex: searchRgx, $options: "i" } },
+          { price: { $gte: min, $lte: max } },
+        ],
+      };
+    }
+    let skipno = size * (page - 1);
     const ProductData = await ProductModel.aggregate([
       {
         $lookup: {
@@ -44,7 +61,10 @@ export const getAllProduct = async (req, res) => {
         },
       },
       { $unwind: "$subcategories" },
-    ]);
+    ]) .sort({ price: 1 })
+      .match(filtered);
+    // .limit(sizeValue)
+    //.skip(skipno);;
     if (ProductData) {
       return res.status(200).json({
         data: ProductData,
